@@ -1,0 +1,7 @@
+http://localhost/project2/search?xssdefense=0&csrfdefense=1&q=%3Cscript%3Efunction%20payload()%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20alert(document.cookie)%3B%0A%20%20%20%20%20%20%20%20%7D%3Bpayload()%3C%2Fscript%3E
+
+(a) With no cookie flags, the XSS payload executes and document.cookie can read the login cookie.
+
+(b) With the HTTPOnly flag, the XSS payload still executes, but JavaScript cannot access the login cookie. Therefore document.cookie does not reveal it.
+
+(c) With the Secure flag, the XSS payload still succeeds because Secure only restricts how the cookie is transmitted; it does not prevent JavaScript from reading the cookie. Browsers also treat localhost as a secure context for this purpose.

